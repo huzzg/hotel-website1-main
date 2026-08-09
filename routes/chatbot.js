@@ -4,16 +4,92 @@ const router = express.Router();
 
 const chatbotController = require("../controllers/chatbotController");
 
-router.get("/menu", chatbotController.menu);
+// ============================================================
+// MENU
+// ============================================================
 
-router.get("/rooms", chatbotController.rooms);
+router.get(
+    "/menu",
+    chatbotController.menu
+);
 
-router.get("/prices", chatbotController.prices);
+// ============================================================
+// CHAT TỰ NHIÊN
+// POST /chatbot/chat
+// Body: { message: "phòng nào còn trống?" }
+// ============================================================
 
-router.get("/discounts", chatbotController.discounts);
+router.post(
+    "/chat",
+    chatbotController.chat
+);
 
-router.get("/contact", chatbotController.contact);
+// ============================================================
+// PHÒNG
+// ============================================================
 
-router.get("/checkin", chatbotController.checkin);
+// Danh sách phòng
+router.get(
+    "/rooms",
+    chatbotController.rooms
+);
+
+// Chi tiết một phòng
+router.get(
+    "/room/:id",
+    chatbotController.roomDetail
+);
+
+// ============================================================
+// GIÁ PHÒNG
+// ============================================================
+
+router.get(
+    "/prices",
+    chatbotController.prices
+);
+
+// ============================================================
+// KHUYẾN MÃI
+// ============================================================
+
+router.get(
+    "/discounts",
+    chatbotController.discounts
+);
+
+// ============================================================
+// ĐƠN ĐẶT PHÒNG
+// ============================================================
+
+// Danh sách đơn của user hiện tại
+router.get(
+    "/bookings",
+    chatbotController.myBookings
+);
+
+// Chi tiết một đơn của user hiện tại
+router.get(
+    "/booking/:id",
+    chatbotController.bookingDetail
+);
+
+// ============================================================
+// CHECK-IN / CHECK-OUT
+// ============================================================
+
+router.get(
+    "/checkin",
+    chatbotController.checkin
+);
+
+// ============================================================
+// LIÊN HỆ
+// ============================================================
+
+router.get(
+    "/contact",
+    chatbotController.contact
+);
 
 module.exports = router;

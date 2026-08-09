@@ -1,28 +1,114 @@
-<!-- Nút mở chatbot -->
-<div id="chat-toggle">
-    💬
+<!-- =========================================================
+     HOTEL PHENIKAA CHATBOT
+========================================================= -->
+
+<div id="chat-toggle" aria-label="Mở trợ lý">
+    <span>🤖</span>
 </div>
 
-<!-- Hộp chatbot -->
-<div id="chat-box">
+<div id="chat-box" aria-hidden="true">
 
+    <!-- HEADER -->
     <div id="chat-header">
-        🤖 Phenikaa Assistant
-        <span id="chat-close">&times;</span>
-    </div>
 
-    <div id="chat-body">
+        <div class="chat-header-info">
+            <div class="chat-avatar">
+                🤖
+            </div>
 
-        <div class="bot-message">
-            Xin chào 👋<br>
-            Tôi có thể giúp gì cho bạn?
+            <div>
+                <div class="chat-title">
+                    Trợ lý Hotel Phenikaa
+                </div>
+
+                <div class="chat-status">
+                    <span class="status-dot"></span>
+                    Đang trực tuyến
+                </div>
+            </div>
         </div>
 
+        <button
+            type="button"
+            id="chat-close"
+            aria-label="Đóng chatbot"
+        >
+            ×
+        </button>
+
+    </div>
+
+
+    <!-- BODY -->
+    <div id="chat-body">
+
+        <!-- WELCOME -->
+        <div id="chat-welcome">
+
+            <div class="bot-message welcome-message">
+
+                <div class="welcome-icon">
+                    👋
+                </div>
+
+                <div class="welcome-title">
+                    Xin chào!
+                </div>
+
+                <div class="welcome-text">
+                    Mình là trợ lý ảo của Hotel Phenikaa.
+                    Bạn có thể hỏi mình về phòng, giá,
+                    khuyến mãi, đặt phòng và đơn của bạn.
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- QUICK MENU -->
         <div id="chat-options"></div>
+
+
+        <!-- CHAT MESSAGES -->
+        <div id="chat-messages"></div>
+
+
+        <!-- TYPING -->
+        <div
+            id="chat-typing"
+            class="bot-message typing-message"
+            style="display:none;"
+        >
+
+            <span></span>
+            <span></span>
+            <span></span>
+
+        </div>
+
+    </div>
+
+
+    <!-- INPUT -->
+    <div id="chat-input-area">
+
+        <input
+            type="text"
+            id="chat-input"
+            placeholder="Hỏi trợ lý về phòng, giá, đơn đặt..."
+            autocomplete="off"
+            maxlength="500"
+        >
+
+        <button
+            type="button"
+            id="chat-send"
+            aria-label="Gửi"
+        >
+            ➤
+        </button>
 
     </div>
 
 </div>
-
-<link rel="stylesheet" href="/css/chatbot.css">
-<script src="/js/chatbot.js"></script>
