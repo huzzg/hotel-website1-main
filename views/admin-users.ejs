@@ -1,0 +1,87 @@
+<%- include('partials/header') %>
+
+<div class="container my-4">
+  <ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Tổng quan</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/rooms">Phòng</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/bookings">Đơn đặt</a></li>
+    <li class="nav-item"><a class="nav-link active" href="/admin/users">Khách hàng</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/discounts">Mã giảm giá</a></li>
+  </ul>
+
+  <div class="card p-3 border-0 shadow-sm rounded-4">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+        <tr>
+          <th>#</th><th>Tài khoản</th><th>Email</th><th>Họ tên</th><th>SĐT</th><th>Role</th><th>Trạng thái</th><th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <% users.forEach((u,i)=>{ %>
+          <tr>
+            <td><%= i+1 %></td>
+            <td><%= u.username %></td>
+            <td><%= u.email %></td>
+            <td><%= u.profile?.name || '' %></td>
+            <td><%= u.profile?.phone || '' %></td>
+            <td><span class="badge bg-info text-dark"><%= u.role || 'user' %></span></td>
+            <td>
+              <span class="badge bg-<%= u.isBlocked ? 'secondary' : 'success' %>">
+                <%= u.isBlocked ? 'bị khóa' : 'hoạt động' %>
+              </span>
+            </td>
+            <td class="text-end">
+              <% if (u.role !== 'admin') { %>
+            <form action="/admin/users/<%= u._id %>/toggle-block" method="post" style="display:inline;">
+            <button class="btn btn-sm <%= u.isBlocked ? 'btn-success' : 'btn-warning' %>">
+        <%= u.isBlocked ? 'Mở khóa' : 'Chặn' %>
+      </button>
+    </form>
+    <form method="post" action="/admin/users/<%= u._id %>/delete" class="d-inline delete-user-form">
+      <button type="button" class="btn btn-sm btn-danger btn-delete-user" data-name="<%= u.username %>">Xóa</button>
+    </form>
+  <% } %>
+</td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.btn-delete-user').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const form = e.target.closest('form');
+      const name = e.target.dataset.name || 'người dùng này';
+
+      Swal.fire({
+        title: 'Xóa tài khoản?',
+        text: `Bạn có chắc muốn xóa tài khoản "${name}"? Hành động này không thể hoàn tác.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xóa ngay',
+        cancelButtonText: 'Hủy',
+        background: '#fefefe',
+        color: '#333',
+        reverseButtons: true
+      }).then(result => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  });
+});
+</script>
+
+

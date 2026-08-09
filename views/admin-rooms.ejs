@@ -1,0 +1,289 @@
+<%- include('partials/header') %>
+
+<div class="container my-4">
+  <!-- Nav Admin -->
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Tổng quan</a></li>
+    <li class="nav-item"><a class="nav-link active" href="/admin/rooms">Phòng</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/bookings">Đơn đặt</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/users">Khách hàng</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/discounts">Mã giảm giá</a></li>
+  </ul>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Quản lý phòng</h3>
+    <button id="addRoomBtn" class="btn btn-primary shadow-sm px-4 py-2">+ Thêm phòng</button>
+  </div>
+
+  <div class="card p-3 shadow-sm rounded-4 border-0">
+    <table class="table align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>#</th>
+          <th>Số phòng</th>
+          <th>Loại</th>
+          <th>Giá/đêm</th>
+          <th>Trạng thái</th>
+          <th>Ảnh</th>
+          <th>Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (rooms && rooms.length) { %>
+          <% rooms.forEach(function(room, idx){ 
+               let thumb = '/images/default-avatar.jpg';
+               if (room.image) {
+                 const img = String(room.image).trim();
+                 const isUrl = img.startsWith('http://') || img.startsWith('https://');
+                 if (isUrl) thumb = img;
+                 else if (img.startsWith('/')) thumb = img;
+                 else if (img.indexOf('/') !== -1) thumb = img.startsWith('uploads/') ? '/' + img : '/' + img;
+                 else thumb = '/uploads/rooms/' + img;
+               }
+          %>
+            <tr>
+              <td><%= idx+1 %></td>
+              <td class="fw-semibold"><%= room.roomNumber %></td>
+              <td><%= room.type %></td>
+              <td><%= Number(room.price||0).toLocaleString('vi-VN') %>đ</td>
+              <td>
+                <span class="badge bg-<%= room.status === 'available' ? 'success' : (room.status==='booked'?'secondary':'warning') %> px-3 py-2 rounded-pill">
+                  <%= room.status === 'available' ? 'Còn trống' : (room.status==='booked'?'Đã có khách':'Bảo trì') %>
+                </span>
+              </td>
+              <td>
+                <img src="<%= thumb %>" style="width:80px;height:60px;object-fit:cover;border-radius:8px;" 
+                     onerror="this.src='/images/default-avatar.jpg'">
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-outline-primary btn-edit-room"
+                          data-id="<%= room._id %>"
+                          data-room-number="<%= room.roomNumber %>"
+                          data-type="<%= room.type %>"
+                          data-price="<%= room.price %>"
+                          data-status="<%= room.status %>"
+                          data-image="<%= room.image || '' %>"
+                          data-description="<%= room.description ? room.description.replace(/"/g, '&quot;') : '' %>">
+                    ✏️ Sửa
+                  </button>
+
+                  <form method="post" action="/admin/rooms/<%= room._id %>/delete" class="d-inline delete-room-form">
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete-room" data-room="<%= room.roomNumber %>">🗑️ Xóa</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr><td colspan="7" class="text-center text-muted py-3">Chưa có phòng nào được thêm.</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL: Thêm/Sửa phòng -->
+<div class="modal fade" id="editRoomModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+      <form id="editRoomForm" method="post" action="/admin/rooms" enctype="multipart/form-data">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title fw-semibold">Sửa thông tin phòng</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <div class="row g-4">
+            <!-- Thông tin -->
+            <div class="col-md-7">
+              <input type="hidden" id="editRoomId" name="roomId">
+              <input type="hidden" id="editRoomExistingImage" name="existingImage">
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Số phòng</label>
+                <input class="form-control form-control-lg rounded-3" id="editRoomNumber" name="roomNumber" placeholder="Nhập số phòng..." required>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">Loại phòng</label>
+                  <select class="form-select form-select-lg rounded-3" id="editRoomType" name="type" required>
+                    <option value="Standard">Standard</option>
+                    <option value="Superior">Superior</option>
+                    <option value="Deluxe">Deluxe</option>
+                    <option value="Suite">Suite</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">Giá/đêm (VNĐ)</label>
+                  <input class="form-control form-control-lg rounded-3" id="editRoomPrice" name="price" type="number" min="0" required>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Trạng thái</label>
+                <select class="form-select form-select-lg rounded-3" id="editRoomStatus" name="status">
+                  <option value="available">Còn trống</option>
+                  <option value="booked">Đã có khách</option>
+                  <option value="maintenance">Bảo trì</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label fw-semibold">Mô tả phòng</label>
+                <textarea class="form-control rounded-3" id="editRoomDescription" name="description" rows="4" placeholder="Nhập mô tả chi tiết về phòng..."></textarea>
+              </div>
+            </div>
+
+            <!-- Ảnh -->
+            <div class="col-md-5">
+              <label class="form-label fw-semibold">Ảnh phòng</label>
+              <input type="file" class="form-control form-control-lg rounded-3 mb-3" id="editRoomImage" name="image" accept="image/*">
+              <div class="text-center border rounded-4 p-2 bg-light">
+                <img id="editRoomPreview" src="/images/room-placeholder.jpg" 
+                     alt="Ảnh phòng" class="img-fluid rounded-4" style="max-height:260px;object-fit:cover;">
+              </div>
+              <small class="text-muted d-block mt-2 text-center">Chọn ảnh để thay, để trống nếu muốn giữ ảnh cũ.</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-light d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary px-4 rounded-3" data-bs-dismiss="modal">Huỷ</button>
+          <button type="submit" class="btn btn-primary px-5 rounded-3">💾 Lưu</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const roomModal = new bootstrap.Modal(document.getElementById('editRoomModal'));
+  const modalEl = document.getElementById('editRoomModal');
+
+modalEl.addEventListener('hidden.bs.modal', () => {
+    form.reset();
+
+    form.action = '/admin/rooms';
+
+    preview.src = '/images/room-placeholder.jpg';
+
+    imgInput.value = '';
+
+    document.body.classList.remove('modal-open');
+
+    document.querySelectorAll('.modal-backdrop').forEach(e => e.remove());
+});
+  const addBtn = document.getElementById('addRoomBtn');
+  const editButtons = document.querySelectorAll('.btn-edit-room');
+  const form = document.getElementById('editRoomForm');
+  const preview = document.getElementById('editRoomPreview');
+  const imgInput = document.getElementById('editRoomImage');
+
+  // 🧩 Hàm reset form (khi thêm mới)
+  function resetForm() {
+    form.action = '/admin/rooms';
+    document.querySelector('.modal-title').textContent = 'Thêm phòng mới';
+    form.reset();
+    preview.src = '/images/room-placeholder.jpg';
+    document.getElementById('editRoomId').value = '';
+  }
+
+  // 🖼️ Xem trước ảnh khi chọn
+  imgInput?.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = ev => preview.src = ev.target.result;
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // ➕ Khi bấm “Thêm phòng”
+  addBtn?.addEventListener('click', () => {
+    resetForm();
+    imgInput.value = '';
+
+    document.getElementById('editRoomExistingImage').value = image || '';
+    roomModal.show();
+  });
+
+  // ✏️ Khi bấm “Sửa phòng”
+  editButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const roomNumber = btn.dataset.roomNumber;
+      const type = btn.dataset.type;
+      const price = btn.dataset.price;
+      const status = btn.dataset.status;
+      const description = btn.dataset.description;
+      const image = btn.dataset.image;
+
+      form.action = `/admin/rooms/${id}`;
+      document.querySelector('.modal-title').textContent = 'Sửa thông tin phòng';
+
+      // Đổ dữ liệu vào form
+      document.getElementById('editRoomId').value = id;
+      document.getElementById('editRoomNumber').value = roomNumber;
+      document.getElementById('editRoomType').value = type;
+      document.getElementById('editRoomPrice').value = price;
+      document.getElementById('editRoomStatus').value = status;
+      document.getElementById('editRoomDescription').value = description || '';
+
+      // Ảnh
+      if (image) {
+        if (image.startsWith('http')) {
+          preview.src = image;
+        } else if (image.startsWith('/')) {
+          preview.src = image;
+        } else {
+          preview.src = '/uploads/rooms/' + image;
+        }
+      } else {
+        preview.src = '/images/room-placeholder.jpg';
+      }
+
+      roomModal.show();
+    });
+  });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Xóa phòng bằng SweetAlert
+  document.querySelectorAll('.btn-delete-room').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const form = e.target.closest('form');
+      const roomNum = e.target.dataset.room || 'N/A';
+
+      Swal.fire({
+        title: 'Xác nhận xóa phòng?',
+        text: `Bạn có chắc muốn xóa phòng ${roomNum}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xóa ngay',
+        cancelButtonText: 'Hủy',
+        background: '#fefefe',
+        color: '#333',
+        reverseButtons: true
+      }).then((result) => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  });
+});
+</script>
+
+

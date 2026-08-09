@@ -1,0 +1,139 @@
+<%- include('partials/header') %>
+
+<div class="container my-4">
+  <ul class="nav nav-pills mb-3">
+    <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Tổng quan</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/rooms">Phòng</a></li>
+    <li class="nav-item"><a class="nav-link active" href="/admin/bookings">Đơn đặt</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/users">Khách hàng</a></li>
+    <li class="nav-item"><a class="nav-link" href="/admin/discounts">Mã giảm giá</a></li>
+  </ul>
+
+  <div class="card p-3 border-0 shadow-sm rounded-4">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+        <tr>
+          <th>#</th><th>Phòng</th><th>Người đặt</th><th>Check-in</th><th>Check-out</th><th>Tổng tiền</th><th>Trạng thái</th><th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <% bookings.forEach((b, i) => { %>
+          <tr>
+            <td><%= i+1 %></td>
+            <td>
+              <div class="small fw-semibold"><%= b.roomId?.roomNumber %> · <%= b.roomId?.type %></div>
+              <div class="text-muted small"><%= (b.roomId?.price||0).toLocaleString('vi-VN') %>đ/đêm</div>
+            </td>
+            <td>
+              <div class="fw-semibold"><%= b.userId?.username %></div>
+              <div class="text-muted small"><%= b.userId?.email %></div>
+            </td>
+            <td><%= new Date(b.checkIn).toLocaleDateString('vi-VN') %></td>
+            <td><%= new Date(b.checkOut).toLocaleDateString('vi-VN') %></td>
+            <td><%= Number(b.totalPrice||0).toLocaleString('vi-VN') %>đ</td>
+            <td>
+              <% 
+                let badgeClass = 'bg-secondary';
+                let statusText = '';
+
+                switch (b.status) {
+                  case 'paid': badgeClass = 'bg-success'; statusText = 'Đã thanh toán'; break;
+                  case 'checked_in': badgeClass = 'bg-primary'; statusText = 'Đang thuê'; break;
+                  case 'checked_out': badgeClass = 'bg-info'; statusText = 'Đã trả phòng'; break;
+                  case 'cancelled': badgeClass = 'bg-danger'; statusText = 'Đã hủy'; break;
+                  default: badgeClass = 'bg-warning text-dark'; statusText = 'Chờ xác nhận'; break;
+                }
+              %>
+              <span class="badge <%= badgeClass %>"><%= statusText %></span>
+            </td>
+
+            <td class="text-end">
+              <div class="d-flex gap-2 justify-content-end align-items-center">
+                <form action="/admin/bookings/<%= b._id %>/status" method="post" class="d-flex gap-2 align-items-center">
+                  <select name="status" class="form-select form-select-sm" style="width:160px">
+
+    <option value="pending"
+        <%= b.status === "pending" ? "selected" : "" %>>
+        Chờ xác nhận
+    </option>
+
+    <option value="paid"
+        <%= b.status === "paid" ? "selected" : "" %>>
+        Đã thanh toán
+    </option>
+
+    <option value="checked_in"
+        <%= b.status === "checked_in" ? "selected" : "" %>>
+        Đang thuê
+    </option>
+
+    <option value="checked_out"
+        <%= b.status === "checked_out" ? "selected" : "" %>>
+        Đã trả phòng
+    </option>
+
+    <option value="cancelled"
+        <%= b.status === "cancelled" ? "selected" : "" %>>
+        Đã hủy
+    </option>
+
+</select>
+                  <button class="btn btn-sm btn-primary">Cập nhật</button>
+                </form>
+
+                <!-- Delete form -->
+                <form method="post" action="/admin/bookings/<%= b._id %>/delete" class="d-inline delete-booking-form">
+                  <button type="button" 
+        class="btn btn-sm btn-outline-danger btn-delete-booking" 
+        data-room="<%= b.roomId ? b.roomId.roomNumber : 'Không xác định' %>">
+  Xóa
+</button>
+
+                </form>
+              </div>
+            </td>
+          </tr>
+        <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Xử lý nút xóa booking bằng SweetAlert
+  document.querySelectorAll('.btn-delete-booking').forEach(btn => {
+    btn.addEventListener('click', e => {
+      const form = e.target.closest('form');
+      const roomNum = e.target.dataset.room || 'N/A';
+
+      Swal.fire({
+        title: 'Xác nhận xóa đơn đặt phòng?',
+        text: `Bạn có chắc muốn xóa đơn phòng ${roomNum}? Hành động này không thể hoàn tác.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xóa ngay',
+        cancelButtonText: 'Hủy',
+        background: '#fefefe',
+        color: '#333',
+        reverseButtons: true
+      }).then(result => {
+        if (result.isConfirmed) {
+          form.submit();
+        }
+      });
+    });
+  });
+});
+</script>
+
+
